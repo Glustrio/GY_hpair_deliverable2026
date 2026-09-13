@@ -71,7 +71,7 @@ Please create an account at [Vercel](https://vercel.com/) and then link your rep
 
 ## Issues or Assistance
 
-If you run into any issues cloning the repo or breaking bugs that seem outside of your ability to fix, please reach out to Natalia Siwek and Ethan Kiang at nataliasiwek@college.harvard.edu and ekiang@college.harvard.edu. Good luck, we look forward to your submissions!
+If you run into any issues cloning the repo or breaking bugs that seem outside of your ability to fix, please reach out to Christopher Qiu and Ashley Zheng at cqiu@college.harvard.edu and ashleyzheng@college.harvard.edu. Good luck, we look forward to your submissions!
 
 ## AI Policy
 
