@@ -4,7 +4,7 @@ Build a **personal information form application** with the following features:
 
 ---
 
-## Required Features (Must Implement)
+## Recommended Features
 
 1. **Form Validation**
    - Real-time validation  
@@ -33,7 +33,7 @@ Build a **personal information form application** with the following features:
 
 ---
 
-## Bonus / Creative Features (Optional but Encouraged)
+## Bonus / Creative Features
 
 1. **User Experience Enhancements**
    - Loading states  
