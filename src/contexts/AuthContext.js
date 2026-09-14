@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChange, getCurrentUser } from '../services/authService';
+import { onAuthStateChange } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -27,8 +27,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
-    isAuthenticated: !!user,
-    userId: user?.uid || null
+    userId: user?.uid || null,
   };
 
   return (

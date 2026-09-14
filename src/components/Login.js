@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInUser, registerUser } from '../services/authService';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,12 +21,7 @@ const Login = ({ onLogin }) => {
         result = await registerUser(email, password);
       }
 
-      if (result.success) {
-        setMessage(result.message);
-        onLogin(result.user);
-      } else {
-        setMessage(result.message);
-      }
+      setMessage(result.message);
     } catch (error) {
       setMessage('An error occurred. Please try again.');
     } finally {
@@ -37,38 +32,55 @@ const Login = ({ onLogin }) => {
   return (
     <div className="container">
       <div className="form-container">
-        <h1>{isLogin ? 'Login' : 'Register'}</h1>
+        <h2>{isLogin ? 'Sign in' : 'Create an account'}</h2>
         <p>{isLogin ? 'Sign in to access the form challenge' : 'Create an account to get started'}</p>
 
         {message && (
-          <div className={`submit-message ${message.includes('successful') ? 'success' : 'error'}`}>
+          <div
+            role="alert"
+            className={`submit-message ${message.includes('successful') ? 'success' : 'error'}`}
+          >
             {message}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label" htmlFor="email">
+              Email address
+            </label>
             <input
+              id="email"
+              name="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-input"
-              placeholder="Enter your email"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
+            <p className="form-hint" id="password-hint">
+              At least 6 characters.
+            </p>
             <input
+              id="password"
+              name="password"
               type="password"
+              // current-password on sign in, new-password on register, so a password
+              // manager offers to save a new one rather than autofilling the old one.
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
-              placeholder="Enter your password"
+              aria-describedby="password-hint"
               required
-              minLength="6"
+              minLength={6}
             />
           </div>
 
@@ -92,13 +104,7 @@ const Login = ({ onLogin }) => {
                 setIsLogin(!isLogin);
                 setMessage('');
               }}
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                color: '#007bff', 
-                textDecoration: 'underline',
-                cursor: 'pointer'
-              }}
+              className="btn-link"
             >
               {isLogin ? 'Register here' : 'Login here'}
             </button>

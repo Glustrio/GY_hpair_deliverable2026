@@ -1,19 +1,9 @@
-.App {
-  text-align: center;
-}
-
+/* Only the header bar is centred. The starter centred the whole app, which meant
+   every label, error and summary row in the form inherited it and had to be undone. */
 .App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
   margin-bottom: 20px;
-}
-
-.App-header h1 {
-  margin-bottom: 10px;
-}
-
-.App-header p {
-  font-size: 16px;
-  opacity: 0.8;
+  padding: 20px;
+  background-color: #282c34;
+  color: white;
+  text-align: center;
 }

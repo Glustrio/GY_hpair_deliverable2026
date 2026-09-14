@@ -1,71 +1,29 @@
 import React from 'react';
+import FormField from '../FormField';
+import DateOfBirthField from '../DateOfBirthField';
+import { FIELDS } from '../../validation/applicationSchema';
+import { COUNTRIES } from '../../constants/countries';
 
-const PersonalInfoStep = ({ formData, setFormData }) => {
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+const PersonalInfoStep = () => (
+  <>
+    <FormField name={FIELDS.firstName} label="First name" autoComplete="given-name" />
+    <FormField name={FIELDS.lastName} label="Last name" autoComplete="family-name" />
 
-  return (
-    <div>
-      <h2>Personal Information</h2>
-      <p>Please provide your basic personal details.</p>
-      
-      <div className="form-group">
-        <label className="form-label">First Name *</label>
-        <input 
-          type="text" 
-          name="firstName"
-          value={formData.firstName || ''}
-          onChange={handleInputChange}
-          className="form-input" 
-          placeholder="Enter your first name" 
-        />
-      </div>
+    <DateOfBirthField />
 
-      <div className="form-group">
-        <label className="form-label">Last Name *</label>
-        <input 
-          type="text" 
-          name="lastName"
-          value={formData.lastName || ''}
-          onChange={handleInputChange}
-          className="form-input" 
-          placeholder="Enter your last name" 
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Date of Birth *</label>
-        <input 
-          type="date" 
-          name="dateOfBirth"
-          value={formData.dateOfBirth || ''}
-          onChange={handleInputChange}
-          className="form-input" 
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Gender *</label>
-        <select 
-          name="gender"
-          value={formData.gender || ''}
-          onChange={handleInputChange}
-          className="form-input"
-        >
-          <option value="">Select gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-          <option value="prefer-not-to-say">Prefer not to say</option>
-        </select>
-      </div>
-    </div>
-  );
-};
+    {/* Labelled citizenship rather than nationality because the list holds country
+        names, so "Nationality: Japan" would be a question and answer that disagree.
+        No autocomplete attribute: the spec defines country as part of an address, so
+        a browser would fill in where the applicant lives, not where they are a citizen. */}
+    <FormField name={FIELDS.citizenship} label="Country of citizenship" as="select">
+      <option value="">Select a country</option>
+      {COUNTRIES.map((country) => (
+        <option key={country.code} value={country.code}>
+          {country.name}
+        </option>
+      ))}
+    </FormField>
+  </>
+);
 
 export default PersonalInfoStep;

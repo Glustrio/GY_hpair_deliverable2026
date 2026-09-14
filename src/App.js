@@ -1,5 +1,4 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import MultiStepForm from './components/MultiStepForm';
@@ -12,38 +11,29 @@ const ProtectedRoute = ({ children }) => {
     return (
       <div className="container">
         <div className="form-container">
-          <h2>Loading...</h2>
+          <p>Checking your sign in.</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Login onLogin={() => {}} />;
-  }
-
-  return children;
+  return user ? children : <Login />;
 };
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <header className="App-header">
-            <h1>Personal Information Form Challenge</h1>
-          </header>
-          <main>
-            <Routes>
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <MultiStepForm />
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </main>
-        </div>
-      </Router>
+      <div className="App">
+        <header className="App-header">
+          {/* The only h1 on the page. Each step uses the heading below it. */}
+          <h1>HPAIR Application</h1>
+        </header>
+        <main>
+          <ProtectedRoute>
+            <MultiStepForm />
+          </ProtectedRoute>
+        </main>
+      </div>
     </AuthProvider>
   );
 }

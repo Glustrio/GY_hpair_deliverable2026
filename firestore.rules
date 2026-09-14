@@ -1,0 +1,105 @@
+rules_version = '2';
+
+// Published through the Firebase console at Firestore -> Rules.
+// Committed here so the security model can be read without logging in to Firebase.
+//
+// These rules do authorization, not validation. Yup checks formats and shows the
+// user a message; rules decide who may read and write what. Re-checking every field
+// format here would duplicate Yup in a language with no tests and no error message
+// the user ever sees, where the only failure mode is silently rejecting a valid
+// application.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /formSubmissions/{submissionId} {
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // The incoming document must claim the uid and email from the signed token,
+      // so a user cannot write a submission under someone else's name.
+      function ownsIncomingDoc() {
+        return request.resource.data.userId == request.auth.uid
+            && request.resource.data.userEmail == request.auth.token.email;
+      }
+
+      // Exactly the keys toSubmission() returns, plus the timestamp the service adds.
+      // hasAll is the lower bound and hasOnly the upper one: without hasAll a
+      // submission could be written with no name, and without hasOnly extra fields
+      // could be smuggled in. keys() does not look inside a nested map, so the cv
+      // map is bounded separately or it could be padded to the 1 MiB document limit.
+      function hasExpectedKeys() {
+        return request.resource.data.keys().hasAll([
+                 'userId', 'userEmail', 'firstName', 'lastName', 'dateOfBirth',
+                 'citizenship', 'address', 'phone', 'preferredLanguage', 'cv',
+                 'hasLinkedin', 'linkedinUrl', 'gender', 'submittedAt'
+               ])
+            && request.resource.data.keys().hasOnly([
+                 'userId', 'userEmail', 'firstName', 'lastName', 'dateOfBirth',
+                 'citizenship', 'address', 'phone', 'preferredLanguage', 'cv',
+                 'hasLinkedin', 'linkedinUrl', 'gender', 'submittedAt'
+               ])
+            && request.resource.data.cv.keys().hasOnly([
+                 'cvDocId', 'fileName', 'sizeBytes', 'contentType'
+               ]);
+      }
+
+      // The CV document id starts with its owner's uid, so this check stops a user
+      // attaching someone else's CV without having to read that other document.
+      function cvIsOwnUpload() {
+        return request.resource.data.cv.cvDocId.matches('^' + request.auth.uid + '_.*');
+      }
+
+      allow create: if isSignedIn()
+                    && ownsIncomingDoc()
+                    && hasExpectedKeys()
+                    && cvIsOwnUpload()
+                    // Forces serverTimestamp(). A client-supplied date fails this.
+                    && request.resource.data.submittedAt == request.time;
+
+      // This line is the privacy fix. `resource` is the stored document, so a query
+      // can only succeed if it is already scoped to documents this user owns.
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // An application record should not change after it is sent.
+      allow update, delete: if false;
+    }
+
+    // The CV PDFs, one document each, kept out of formSubmissions so that listing
+    // submissions does not download every file.
+    match /cvFiles/{cvDocId} {
+
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    // The id carries the uid, which is what the submission rule checks.
+                    && cvDocId.matches('^' + request.auth.uid + '_.*')
+                    && request.resource.data.contentType == 'application/pdf'
+                    // Enforced on Google's servers. The browser check is only so the
+                    // user gets a message before a pointless write.
+                    && request.resource.data.data.size() > 0
+                    && request.resource.data.data.size() <= 800 * 1024
+                    && request.resource.data.keys().hasOnly([
+                         'ownerId', 'fileName', 'sizeBytes', 'contentType', 'data'
+                       ]);
+
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+
+      // A submitted application is immutable, so the file it points at has to be too.
+      // Choosing a different CV writes a new document rather than overwriting.
+      allow update, delete: if false;
+    }
+
+    // Work in progress, one document per user, named by their uid.
+    match /drafts/{userId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Everything else is denied, so a new collection is locked until someone
+    // deliberately writes a rule for it.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

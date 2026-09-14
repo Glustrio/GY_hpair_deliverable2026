@@ -1,196 +1,309 @@
-import React, { useState, useEffect } from 'react';
-import PersonalInfoStep from './steps/PersonalInfoStep';
-import { submitForm, getFormSubmissions, getSubmissionCount } from '../services/firebaseService';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Formik, Form } from 'formik';
 import { useAuth } from '../contexts/AuthContext';
 import { signOutUser } from '../services/authService';
+import { submitForm } from '../services/firebaseService';
+import { loadDraft, clearDraft } from '../services/draftService';
+import { applicationSchema, EMPTY_VALUES, STEPS, FIELDS } from '../validation/applicationSchema';
+import { toSubmission } from '../utils/submission';
+import StepIndicator from './StepIndicator';
+import AutoSaveDraft from './AutoSaveDraft';
+import SubmissionSuccess from './SubmissionSuccess';
+import MySubmissions from './MySubmissions';
+import PersonalInfoStep from './steps/PersonalInfoStep';
+import ContactStep from './steps/ContactStep';
+import DocumentsStep from './steps/DocumentsStep';
+import ReviewStep from './steps/ReviewStep';
+
+// Firestore's write promise does not settle while the browser is offline, so without
+// a ceiling the button would read "Sending" forever with no explanation.
+const SUBMIT_TIMEOUT_MS = 15000;
+
+// Most inputs have an id equal to their field name. These two do not.
+const FOCUS_TARGET = { [FIELDS.hasLinkedin]: `${FIELDS.hasLinkedin}-yes` };
 
 const MultiStepForm = () => {
-  const [formData, setFormData] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
-  const [submissions, setSubmissions] = useState([]);
-  const [submissionCount, setSubmissionCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { user, userId } = useAuth();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [status, setStatus] = useState('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [result, setResult] = useState(null);
+  const [attempt, setAttempt] = useState(0);
+  const [draft, setDraft] = useState(null);
+  const [draftChecked, setDraftChecked] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleLogout = async () => {
-    await signOutUser();
-  };
+  const headingRef = useRef(null);
+  const errorRef = useRef(null);
+  const previousStep = useRef(stepIndex);
 
-  // Load user's submissions
+  const isLastStep = stepIndex === STEPS.length - 1;
+
   useEffect(() => {
-    loadSubmissions();
+    if (!userId) return;
+    loadDraft(userId).then((res) => {
+      if (res.draft) setDraft(res.draft);
+      setDraftChecked(true);
+    });
   }, [userId]);
 
-  const loadSubmissions = async () => {
+  // Focus has to move after the commit, because the new step's heading does not exist
+  // yet when the click handler runs. Comparing the previous value rather than using a
+  // first-render flag survives StrictMode running effects twice in development.
+  useEffect(() => {
+    if (previousStep.current === stepIndex) return;
+    previousStep.current = stepIndex;
+    headingRef.current?.focus();
+    window.scrollTo(0, 0);
+  }, [stepIndex]);
+
+  useEffect(() => {
+    if (status === 'error') errorRef.current?.focus();
+  }, [status, attempt]);
+
+  const handleLogout = useCallback(() => signOutUser(), []);
+
+  const goNext = async (formik) => {
+    const errors = await formik.validateForm();
+    const { fields } = STEPS[stepIndex];
+    const firstInvalid = fields.find((name) => errors[name]);
+
+    if (firstInvalid) {
+      // setTouched replaces the whole map rather than merging, so spreading the
+      // existing one is what stops earlier steps losing their touched state. The
+      // false argument skips a second full validation that would change nothing.
+      const stepTouched = Object.fromEntries(fields.map((name) => [name, true]));
+      formik.setTouched({ ...formik.touched, ...stepTouched }, false);
+      document.getElementById(FOCUS_TARGET[firstInvalid] ?? firstInvalid)?.focus();
+      return;
+    }
+
+    setStepIndex((current) => current + 1);
+  };
+
+  const handleSubmit = async (values) => {
+    // isSubmitting is state you render from, not a lock, so guard re-entry directly.
+    if (status === 'submitting') return;
+
+    if (!navigator.onLine) {
+      setStatus('error');
+      setStatusMessage(
+        'You appear to be offline. Keep this tab open, reconnect, and try again.'
+      );
+      return;
+    }
+
+    setAttempt((count) => count + 1);
+    setStatus('submitting');
+    setStatusMessage('Sending your application.');
+
     try {
-      setLoading(true);
-      const [submissionsResult, countResult] = await Promise.all([
-        getFormSubmissions(),
-        getSubmissionCount()
+      const write = submitForm(toSubmission(values, user));
+      const firstToSettle = await Promise.race([
+        write,
+        new Promise((resolve) => setTimeout(() => resolve({ slow: true }), SUBMIT_TIMEOUT_MS)),
       ]);
 
-      if (submissionsResult.success) {
-        // Show only current user's submissions
-        const userSubmissions = submissionsResult.data.filter(
-          submission => submission.userId === userId
-        );
-        setSubmissions(userSubmissions);
-      } else {
-        setError(submissionsResult.message);
+      // Say it is taking a while, but keep waiting on the same write. Abandoning it
+      // and inviting a retry is how an applicant ends up with two applications.
+      if (firstToSettle.slow) {
+        setStatusMessage('Still sending. Keep this tab open.');
       }
 
-      if (countResult.success) {
-        setSubmissionCount(countResult.count);
-      }
-    } catch (err) {
-      setError('Failed to load submissions');
-      console.error('Error loading submissions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const response = await write;
 
-  // TODO: Implement form validation using Formik and Yup
-  // TODO: Implement form data handling
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitMessage('');
-    
-    try {
-      // TODO: Add validation before submitting
-      const submissionData = {
-        ...formData,
-        userId: userId
-      };
-      
-      const result = await submitForm(submissionData);
-      
-      if (result.success) {
-        setSubmitMessage('Form submitted successfully!');
-        // Reset form
-        setFormData({});
-        // Reload submissions to show the new one
-        loadSubmissions();
-      } else {
-        setSubmitMessage(result.message);
+      if (!response.success) {
+        setStatus('error');
+        setStatusMessage(response.message);
+        return;
       }
+
+      setResult({ reference: response.id.slice(-8).toUpperCase(), values });
+      setStatus('success');
+      setRefreshKey((key) => key + 1);
+      // Issued only after the write is confirmed, and only after the success screen
+      // has replaced the form, so a pending autosave cannot rewrite the draft.
+      clearDraft(userId);
     } catch (error) {
-      setSubmitMessage('An error occurred. Please try again.');
       console.error('Submit error:', error);
-    } finally {
-      setIsSubmitting(false);
+      setStatus('error');
+      setStatusMessage('Something went wrong. Your answers are still here, so please try again.');
     }
   };
+
+  const startAnother = () => {
+    setResult(null);
+    setStatus('idle');
+    setStatusMessage('');
+    setStepIndex(0);
+  };
+
+  if (status === 'success' && result) {
+    return (
+      <div className="container">
+        <div className="form-container">
+          <SubmissionSuccess
+            reference={result.reference}
+            values={result.values}
+            onStartAnother={startAnother}
+          />
+        </div>
+        <div className="form-container">
+          <MySubmissions userId={userId} refreshKey={refreshKey} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
       <div className="form-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1>Personal Information Form</h1>
-          <button 
-            onClick={handleLogout}
-            className="btn btn-secondary"
-            style={{ fontSize: '14px', padding: '8px 16px' }}
-          >
-            Logout
+        <div className="form-header">
+          <h2>HPAIR application</h2>
+          <button type="button" onClick={handleLogout} className="btn btn-secondary btn-small">
+            Log out
           </button>
         </div>
-        <p>Please provide your basic personal details.</p>
-        
-        <div style={{ 
-          marginBottom: '20px', 
-          padding: '10px', 
-          backgroundColor: '#e3f2fd', 
-          borderRadius: '4px',
-          fontSize: '14px'
-        }}>
-          <strong>Logged in as:</strong> {user.email}
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <PersonalInfoStep 
-            formData={formData} 
-            setFormData={setFormData} 
-          />
-          
-          {submitMessage && (
-            <div className={`submit-message ${submitMessage.includes('successfully') ? 'success' : 'error'}`}>
-              {submitMessage}
-            </div>
-          )}
-          
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
+
+        <p className="signed-in-as">Signed in as {user.email}</p>
+        <p>All questions are required unless they are marked optional.</p>
+
+        <StepIndicator steps={STEPS} currentIndex={stepIndex} />
+
+        <Formik
+          initialValues={EMPTY_VALUES}
+          validationSchema={applicationSchema}
+          onSubmit={handleSubmit}
+        >
+          {(formik) => (
+            <Form
+              noValidate
+              onKeyDown={(event) => {
+                // Enter inside a text field submits the form by default, which on step
+                // one would send a nearly empty application. Route it to Continue
+                // instead, which is what people expect in a wizard anyway.
+                if (
+                  event.key === 'Enter' &&
+                  event.target.tagName !== 'TEXTAREA' &&
+                  event.target.tagName !== 'BUTTON' &&
+                  !isLastStep
+                ) {
+                  event.preventDefault();
+                  goNext(formik);
+                }
+              }}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </button>
-          </div>
-        </form>
-
-        {/* Admin Panel - User's Submissions */}
-        <div style={{ marginTop: '40px', paddingTop: '40px', borderTop: '2px solid #e0e0e0' }}>
-          <h2>Your Form Submissions</h2>
-          <p>View all your submitted forms below.</p>
-          
-          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <p><strong>Logged in as:</strong> {user.email}</p>
-            <p><strong>Total submissions:</strong> {submissionCount}</p>
-            <p><strong>Your submissions:</strong> {submissions.length}</p>
-          </div>
-
-          {error && (
-            <div className="submit-message error">
-              {error}
-            </div>
-          )}
-
-          <button 
-            onClick={loadSubmissions} 
-            className="btn btn-primary"
-            style={{ marginBottom: '20px' }}
-          >
-            Refresh
-          </button>
-
-          {loading ? (
-            <p>Loading submissions...</p>
-          ) : submissions.length === 0 ? (
-            <p>No submissions yet. Fill out the form above to get started!</p>
-          ) : (
-            <div className="submissions-list">
-              {submissions.map((submission) => (
-                <div key={submission.id} className="submission-item">
-                  <div className="submission-header">
-                    <h3>Submission #{submission.id.slice(-8)}</h3>
-                    <span className="submission-date">
-                      {formatDate(submission.submittedAt)}
-                    </span>
+              {draft && (
+                <div className="submit-message info draft-banner">
+                  <p>
+                    You have a saved draft from{' '}
+                    {draft.savedAt?.seconds
+                      ? new Date(draft.savedAt.seconds * 1000).toLocaleString()
+                      : 'earlier'}
+                    .
+                  </p>
+                  <div className="draft-banner-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-small"
+                      onClick={() => {
+                        // Spread over the empty values so every field stays controlled
+                        // even if the draft predates one being added.
+                        formik.setValues({ ...EMPTY_VALUES, ...draft.values });
+                        setStepIndex(Math.min(Math.max(draft.stepIndex ?? 0, 0), STEPS.length - 1));
+                        setDraft(null);
+                      }}
+                    >
+                      Restore it
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => {
+                        clearDraft(userId);
+                        setDraft(null);
+                      }}
+                    >
+                      Start fresh
+                    </button>
                   </div>
-              <div className="submission-details">
-                <p><strong>Name:</strong> {submission.firstName} {submission.lastName}</p>
-                <p><strong>Date of Birth:</strong> {submission.dateOfBirth}</p>
-                <p><strong>Gender:</strong> {submission.gender}</p>
-              </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              <h3 ref={headingRef} tabIndex={-1} className="step-heading">
+                Step {stepIndex + 1} of {STEPS.length}: {STEPS[stepIndex].title}
+              </h3>
+
+              {stepIndex === 0 && <PersonalInfoStep />}
+              {stepIndex === 1 && <ContactStep />}
+              {stepIndex === 2 && <DocumentsStep userId={userId} />}
+              {stepIndex === 3 && <ReviewStep onEditStep={setStepIndex} />}
+
+              {/* Mounted unconditionally. A live region added to the DOM at the same
+                  moment as its text is not announced by several screen readers. */}
+              <div role="status" aria-live="polite">
+                {status === 'submitting' && (
+                  <div className="submit-message loading">{statusMessage}</div>
+                )}
+              </div>
+
+              {status === 'error' && (
+                <div
+                  key={attempt}
+                  ref={errorRef}
+                  tabIndex={-1}
+                  className="submit-message error"
+                  role="alert"
+                >
+                  {statusMessage}
+                </div>
+              )}
+
+              <div className="form-actions">
+                {stepIndex > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-back"
+                    onClick={() => setStepIndex((current) => current - 1)}
+                  >
+                    Back
+                  </button>
+                )}
+
+                {isLastStep ? (
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    // aria-disabled rather than disabled, because disabling the button
+                    // you just pressed drops keyboard focus to the top of the page.
+                    aria-disabled={status === 'submitting'}
+                  >
+                    {status === 'submitting' ? 'Sending' : 'Send application'}
+                  </button>
+                ) : (
+                  // Never disabled. A greyed-out button explains nothing and leaves the
+                  // tab order. Pressing it validates and moves focus to the first problem.
+                  <button type="button" className="btn btn-primary" onClick={() => goNext(formik)}>
+                    Continue
+                  </button>
+                )}
+              </div>
+
+              <AutoSaveDraft
+                userId={userId}
+                stepIndex={stepIndex}
+                paused={!draftChecked || draft !== null}
+              />
+            </Form>
           )}
-        </div>
+        </Formik>
+      </div>
+
+      <div className="form-container">
+        <MySubmissions userId={userId} refreshKey={refreshKey} />
       </div>
     </div>
   );
-};
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return 'N/A';
-  return new Date(timestamp.seconds * 1000).toLocaleString();
 };
 
 export default MultiStepForm;

@@ -59,10 +59,6 @@ export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
 
-// Get current user
-export const getCurrentUser = () => {
-  return auth.currentUser;
-};
 
 // Helper function to get user-friendly error messages
 const getErrorMessage = (errorCode) => {
@@ -73,6 +69,11 @@ const getErrorMessage = (errorCode) => {
       return 'Password should be at least 6 characters.';
     case 'auth/invalid-email':
       return 'Please enter a valid email address.';
+    // Firebase now returns one generic code for a bad email and a bad password, so
+    // the two cases below almost never fire. Email enumeration protection is on by
+    // default, which stops an attacker probing which addresses have accounts.
+    case 'auth/invalid-credential':
+      return 'That email and password do not match an account. Check both and try again.';
     case 'auth/user-not-found':
       return 'No account found with this email. Please register first.';
     case 'auth/wrong-password':
@@ -82,12 +83,4 @@ const getErrorMessage = (errorCode) => {
     default:
       return 'An error occurred. Please try again.';
   }
-};
-
-export default {
-  registerUser,
-  signInUser,
-  signOutUser,
-  onAuthStateChange,
-  getCurrentUser
 };
