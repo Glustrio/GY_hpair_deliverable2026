@@ -254,6 +254,7 @@ export const applicationSchema = Yup.object({
 // Which fields each step is responsible for. The gate reads errors by these names,
 // so they are taken from FIELDS rather than typed again.
 export const STEPS = [
+  { id: 'cv', title: 'Your CV', fields: [FIELDS.cv] },
   {
     id: 'about',
     title: 'About you',
@@ -261,18 +262,15 @@ export const STEPS = [
   },
   {
     id: 'contact',
-    title: 'Contact details',
+    title: 'Contact and profile',
     fields: [
       FIELDS.address,
       FIELDS.phone,
       FIELDS.preferredLanguage,
       FIELDS.preferredLanguageOther,
+      FIELDS.hasLinkedin,
+      FIELDS.linkedinUrl,
     ],
-  },
-  {
-    id: 'documents',
-    title: 'Documents and profile',
-    fields: [FIELDS.cv, FIELDS.hasLinkedin, FIELDS.linkedinUrl],
   },
   { id: 'review', title: 'Check your answers', fields: [] },
 ];

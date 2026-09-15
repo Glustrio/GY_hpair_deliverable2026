@@ -1,11 +1,13 @@
 import React from 'react';
-import { useFormikContext } from 'formik';
+import { useField, useFormikContext } from 'formik';
 import FormField from '../FormField';
 import { FIELDS } from '../../validation/applicationSchema';
 import { LANGUAGES } from '../../constants/languages';
 
 const ContactStep = () => {
-  const { values } = useFormikContext();
+  const { values, handleChange } = useFormikContext();
+  const [, linkedinMeta] = useField(FIELDS.hasLinkedin);
+  const showLinkedinError = linkedinMeta.touched && Boolean(linkedinMeta.error);
 
   return (
     <>
@@ -42,6 +44,49 @@ const ContactStep = () => {
           name={FIELDS.preferredLanguageOther}
           label="Which language?"
           hint="Anything outside the list above."
+        />
+      )}
+
+      {/* A fieldset because "Yes" alone means nothing. Without the legend a screen
+          reader announces only "Yes, radio button, 1 of 2". */}
+      <fieldset className="form-group radio-fieldset">
+        <legend className="form-label">Do you have a LinkedIn profile?</legend>
+
+        {[
+          { value: 'yes', label: 'Yes' },
+          { value: 'no', label: 'No' },
+        ].map((option) => (
+          <div className="radio-option" key={option.value}>
+            <input
+              type="radio"
+              id={`${FIELDS.hasLinkedin}-${option.value}`}
+              name={FIELDS.hasLinkedin}
+              value={option.value}
+              checked={values[FIELDS.hasLinkedin] === option.value}
+              onChange={handleChange}
+              aria-describedby={showLinkedinError ? 'hasLinkedin-error' : undefined}
+            />
+            <label htmlFor={`${FIELDS.hasLinkedin}-${option.value}`}>{option.label}</label>
+          </div>
+        ))}
+
+        {showLinkedinError && (
+          <p className="form-error" id="hasLinkedin-error">
+            {linkedinMeta.error}
+          </p>
+        )}
+      </fieldset>
+
+      {values[FIELDS.hasLinkedin] === 'yes' && (
+        <FormField
+          name={FIELDS.linkedinUrl}
+          label="LinkedIn profile URL"
+          // type="text" not type="url", or the browser rejects linkedin.com/in/name
+          // typed without https:// before Yup ever sees it.
+          type="text"
+          inputMode="url"
+          autoComplete="url"
+          hint="For example, linkedin.com/in/your-name"
         />
       )}
     </>

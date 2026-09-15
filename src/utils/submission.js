@@ -59,18 +59,23 @@ export const toSubmission = (values, user) => ({
 // can never disagree with what the applicant saw before submitting.
 export const SUMMARY_SECTIONS = [
   {
-    title: 'About you',
+    title: 'Your CV',
     step: 0,
+    rows: [{ label: 'CV', value: (v) => v[FIELDS.cv]?.fileName }],
+  },
+  {
+    title: 'About you',
+    step: 1,
     rows: [
       { label: 'First name', value: (v) => v[FIELDS.firstName] },
       { label: 'Last name', value: (v) => v[FIELDS.lastName] },
       { label: 'Date of birth', value: (v) => formatDateOfBirth(v) },
-      { label: 'Country of citizenship', value: (v) => countryName(v[FIELDS.citizenship]) },
+      { label: 'Nationality', value: (v) => countryName(v[FIELDS.citizenship]) },
     ],
   },
   {
-    title: 'Contact details',
-    step: 1,
+    title: 'Contact and profile',
+    step: 2,
     rows: [
       { label: 'Home address', value: (v) => v[FIELDS.address] },
       { label: 'Phone number', value: (v) => v[FIELDS.phone] },
@@ -81,19 +86,11 @@ export const SUMMARY_SECTIONS = [
             ? v[FIELDS.preferredLanguageOther]
             : languageName(v[FIELDS.preferredLanguage]),
       },
-    ],
-  },
-  {
-    title: 'Documents and profile',
-    step: 2,
-    rows: [
-      { label: 'CV', value: (v) => v[FIELDS.cv]?.fileName },
       { label: 'Has a LinkedIn profile', value: (v) => (v[FIELDS.hasLinkedin] === 'yes' ? 'Yes' : 'No') },
       {
         label: 'LinkedIn profile',
         value: (v) => normaliseLinkedinUrl(v[FIELDS.linkedinUrl]),
-        // Without this the review screen shows an empty LinkedIn row to everyone
-        // who answered no.
+        // Without this, everyone who answered no sees an empty LinkedIn row.
         visible: (v) => v[FIELDS.hasLinkedin] === 'yes',
       },
     ],

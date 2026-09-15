@@ -6,7 +6,6 @@ import { renderToString } from 'react-dom/server';
 import { Formik, Form } from 'formik';
 import PersonalInfoStep from './components/steps/PersonalInfoStep';
 import ContactStep from './components/steps/ContactStep';
-import DocumentsStep from './components/steps/DocumentsStep';
 import ReviewStep from './components/steps/ReviewStep';
 import StepIndicator from './components/StepIndicator';
 import DatePicker from './components/DatePicker';
@@ -60,14 +59,14 @@ test('ContactStep uses a textarea for the address, which is what street-address 
   expect(html).toMatch(/type="tel"/);
 });
 
-test('DocumentsStep hides the LinkedIn URL until the user says yes', () => {
-  expect(inForm(<DocumentsStep userId="u1" />, { ...FILLED, hasLinkedin: 'no' }))
+test('ContactStep hides the LinkedIn URL until the user says yes', () => {
+  expect(inForm(<ContactStep />, { ...FILLED, hasLinkedin: 'no' }))
     .not.toContain('LinkedIn profile URL');
-  expect(inForm(<DocumentsStep userId="u1" />, FILLED)).toContain('LinkedIn profile URL');
+  expect(inForm(<ContactStep />, FILLED)).toContain('LinkedIn profile URL');
 });
 
 test('the radio group is wrapped in a fieldset with a legend', () => {
-  const html = inForm(<DocumentsStep userId="u1" />, FILLED);
+  const html = inForm(<ContactStep />, FILLED);
   expect(html).toContain('<legend');
   expect(html).toContain('Do you have a LinkedIn profile?');
   expect(html).toContain('type="radio"');
@@ -205,4 +204,13 @@ describe('parseCv', () => {
       phone: '+34 91 123 4567',
     });
   });
+});
+
+test('the CV step comes first, so autofill happens before anything is typed', () => {
+  expect(STEPS[0].id).toBe('cv');
+  expect(STEPS[0].fields).toEqual(['cv']);
+  // The name and contact fields it fills are downstream of it.
+  expect(STEPS[1].fields).toContain('firstName');
+  expect(STEPS[2].fields).toContain('phone');
+  expect(STEPS[2].fields).toContain('address');
 });

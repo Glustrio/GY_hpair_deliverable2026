@@ -758,3 +758,8 @@ h1, h2, h3 {
   display: inline-block;
   min-width: 108px;
 }
+
+.step-intro {
+  margin-bottom: 20px;
+  color: var(--ink-muted);
+}

@@ -10,9 +10,9 @@ import StepIndicator from './StepIndicator';
 import AutoSaveDraft from './AutoSaveDraft';
 import SubmissionSuccess from './SubmissionSuccess';
 import MySubmissions from './MySubmissions';
+import CvStep from './steps/CvStep';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import ContactStep from './steps/ContactStep';
-import DocumentsStep from './steps/DocumentsStep';
 import ReviewStep from './steps/ReviewStep';
 
 // Firestore's write promise does not settle while the browser is offline, so without
@@ -234,9 +234,9 @@ const MultiStepForm = () => {
                 Step {stepIndex + 1} of {STEPS.length}: {STEPS[stepIndex].title}
               </h3>
 
-              {stepIndex === 0 && <PersonalInfoStep />}
-              {stepIndex === 1 && <ContactStep />}
-              {stepIndex === 2 && <DocumentsStep userId={userId} />}
+              {stepIndex === 0 && <CvStep userId={userId} />}
+              {stepIndex === 1 && <PersonalInfoStep />}
+              {stepIndex === 2 && <ContactStep />}
               {stepIndex === 3 && <ReviewStep onEditStep={setStepIndex} />}
 
               {/* Mounted unconditionally. A live region added to the DOM at the same
