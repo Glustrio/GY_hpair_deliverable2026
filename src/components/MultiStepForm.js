@@ -255,6 +255,12 @@ const MultiStepForm = () => {
 
               {/* Mounted unconditionally. A live region added to the DOM at the same
                   moment as its text is not announced by several screen readers. */}
+{/* Fills in as they type, so there is something to watch build up. */}
+              <div className="ticket-panel">
+                <p className="ticket-panel-label">Your application so far</p>
+                <TicketPreview />
+              </div>
+
               <div role="status" aria-live="polite">
                 {status === 'submitting' && (
                   <div className="submit-message loading">{statusMessage}</div>
@@ -309,11 +315,6 @@ const MultiStepForm = () => {
                 paused={!draftChecked || draft !== null}
               />
 
-              {/* Fills in as they type, so there is something to watch build up. */}
-              <div className="ticket-panel">
-                <p className="ticket-panel-label">Your application so far</p>
-                <TicketPreview />
-              </div>
             </Form>
           )}
         </Formik>

@@ -770,9 +770,10 @@ code {
 
 .ticket-event {
   margin-bottom: 14px;
-  /* Their lighter brand red, not the #960819 used elsewhere. That one is 2:1 on this
-     dark background. This is 5.1:1, and only ever used on dark. */
-  color: #f0523d;
+  /* A tint of their lighter brand red. #960819 is 2:1 on this dark card, and even
+     their #f0523d drops below AA under the sheen, which lifts the background to
+     #333333 at its brightest. This holds 4.95:1 there. */
+  color: #ff7a66;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -780,7 +781,8 @@ code {
 
 .ticket-label,
 .ticket-rows dt {
-  color: #8a8a8a;
+  /* Same reason as the wordmark: has to clear AA with the sheen over it. */
+  color: #a8a8a8;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -893,4 +895,63 @@ code {
 
   .ticket-stub::before { left: -8px; }
   .ticket-stub::after { right: -8px; }
+}
+
+.step-bar {
+  height: 4px;
+  margin-top: 14px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.step-bar-fill {
+  height: 100%;
+  background-color: #0b5ed7;
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+
+/* ---- ticket tilt and sheen ---- */
+
+.ticket {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ticket:hover {
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+}
+
+/* A highlight that follows the cursor. pointer-events:none so it never eats a click. */
+.ticket-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    380px circle at var(--shine-x, 50%) var(--shine-y, 50%),
+    rgba(255, 255, 255, 0.12),
+    transparent 62%
+  );
+  transition: opacity 0.25s ease;
+}
+
+.ticket:hover .ticket-shine {
+  opacity: 1;
+}
+
+/* The tilt is the one piece of motion here that could actually bother someone. */
+@media (prefers-reduced-motion: reduce) {
+  .ticket {
+    transform: none !important;
+  }
+
+  .ticket-shine {
+    display: none;
+  }
 }
