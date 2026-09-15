@@ -1,3 +1,6 @@
+// The confirmation screen. Shows the reference number, the answers, a PDF download
+// and an option to email a copy.
+
 import React, { useEffect, useRef, useState } from 'react';
 import { SUMMARY_SECTIONS, visibleRows, displayValue } from '../utils/submission';
 import { downloadSummaryPdf } from '../utils/summaryPdf';

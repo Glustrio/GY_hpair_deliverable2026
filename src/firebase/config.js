@@ -1,3 +1,6 @@
+// Connects to Firebase once and exports the two things the app uses: the database
+// and auth. Everything else imports them from here, so there is one connection.
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';

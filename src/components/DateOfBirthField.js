@@ -1,11 +1,12 @@
+// Date of birth as three text boxes, with an optional calendar beside them. Three
+// boxes rather than <input type="date">, because that control orders its fields by
+// the operating system's locale and the page cannot override it.
+
 import React, { useRef, useState } from 'react';
 import { useField, useFormikContext } from 'formik';
 import DatePicker from './DatePicker';
 import { FIELDS, buildDate } from '../validation/applicationSchema';
 
-// Three boxes rather than <input type="date">: a picker is for finding a date you do
-// not know, and the native control orders its fields by OS locale, so a US and a UK
-// laptop show different orders on the same page and the page cannot override it.
 // The valid window, which also bounds the year select in the picker.
 const today = new Date();
 const OLDEST = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());

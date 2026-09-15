@@ -1,3 +1,5 @@
+// Step two. Name, date of birth and nationality.
+
 import React from 'react';
 import FormField from '../FormField';
 import DateOfBirthField from '../DateOfBirthField';

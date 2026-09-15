@@ -1,3 +1,6 @@
+// Sign in, register and password reset, sharing one form. Password reset matters:
+// without it someone who forgets theirs cannot get back into their application.
+
 import React, { useState } from 'react';
 import { signInUser, registerUser, resetPassword } from '../services/authService';
 

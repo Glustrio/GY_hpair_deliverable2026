@@ -1,3 +1,6 @@
+// App shell. Decides whether to show the sign in screen or the form, and holds the
+// page's only h1.
+
 import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';

@@ -1,9 +1,11 @@
+// Saves the CV. Firebase Cloud Storage needs a billing account since February 2026,
+// so the PDF goes into Firestore as a bytes field instead.
+
 import { doc, setDoc, Bytes } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { MAX_CV_BYTES, CV_CONTENT_TYPE } from '../validation/applicationSchema';
 
-// Own collection, not inside the submission: the applications list would otherwise
-// download every CV to render a list of reference numbers.
+// Its own collection, so listing submissions does not download every CV.
 const COLLECTION_NAME = 'cvFiles';
 
 // Bytes, not base64: base64 would add a third against a 1 MiB document ceiling.

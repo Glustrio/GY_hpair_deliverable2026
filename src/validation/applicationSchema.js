@@ -1,3 +1,7 @@
+// The single source of truth for what counts as valid, and for the field names.
+// Field names live here as constants because the step gate looks errors up by name
+// and focuses inputs by id, so a one character drift breaks both silently.
+
 import * as Yup from 'yup';
 import { COUNTRY_CODES } from '../constants/countries';
 import { LANGUAGE_CODES } from '../constants/languages';

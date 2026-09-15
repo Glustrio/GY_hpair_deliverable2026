@@ -1,3 +1,5 @@
+// Entry point. Mounts App into the #root div in public/index.html.
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

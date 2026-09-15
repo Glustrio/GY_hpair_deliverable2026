@@ -1,3 +1,6 @@
+// Asks the serverless function to email the applicant a copy. The browser cannot do
+// this itself because it would have to hold the email provider's key.
+
 import { auth } from '../firebase/config';
 import { SUMMARY_SECTIONS, visibleRows, displayValue } from '../utils/submission';
 
@@ -13,6 +16,8 @@ const asText = (values, reference) => {
   return lines.join('\n');
 };
 
+// Sends the applicant's ID token along with the request. The function checks it, so
+// the endpoint cannot be used by anyone who is not signed in to this app.
 export const emailSummary = async (to, values, reference) => {
   try {
     // The function checks this token, so the endpoint cannot be used by strangers.

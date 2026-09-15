@@ -1,3 +1,7 @@
+// Turns the form's values into the document that gets stored, and drives the review
+// screen. Every type conversion happens here and nowhere else, which is why no
+// validation rule has to straddle one.
+
 import { COUNTRIES } from '../constants/countries';
 import { LANGUAGES } from '../constants/languages';
 import { FIELDS, buildDate, normaliseLinkedinUrl } from '../validation/applicationSchema';
@@ -97,6 +101,8 @@ export const SUMMARY_SECTIONS = [
   },
 ];
 
+// Conditional answers are filtered out here, so the review screen and the PDF never
+// show an empty LinkedIn row to someone who answered no.
 export const visibleRows = (section, values) =>
   section.rows.filter((row) => !row.visible || row.visible(values));
 

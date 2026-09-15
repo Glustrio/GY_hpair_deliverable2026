@@ -1,3 +1,6 @@
+// Reads and writes submissions. Queries are scoped to one user in the query itself,
+// not filtered afterwards in the browser.
+
 import {
   collection,
   addDoc,
@@ -12,6 +15,8 @@ import { db } from '../firebase/config';
 
 const COLLECTION_NAME = 'formSubmissions';
 
+// Writes one submission. The timestamp is added here rather than by the caller, so
+// every row is stamped by the server rather than by the applicant's clock.
 export const submitForm = async (formData) => {
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {

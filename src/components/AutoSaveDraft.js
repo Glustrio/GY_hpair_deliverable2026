@@ -1,10 +1,11 @@
+// Saves the in progress application a second after typing stops.
+
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { saveDraft } from '../services/draftService';
 
 const DEBOUNCE_MS = 1000;
 
-// Debounced so a burst of typing writes once. The cleanup cancels a pending save.
 const AutoSaveDraft = ({ userId, stepIndex, paused }) => {
   const { values } = useFormikContext();
   const [savedAt, setSavedAt] = useState(null);

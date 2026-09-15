@@ -1,8 +1,13 @@
+// Holds the signed in user so any component can read it without prop drilling.
+// Firebase tells us when sign in state changes, and this re-renders the tree.
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChange } from '../services/authService';
 
 const AuthContext = createContext();
 
+// Throws rather than returning undefined if used outside the provider, so the mistake
+// surfaces immediately instead of as a confusing null further down.
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

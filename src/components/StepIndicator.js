@@ -1,7 +1,9 @@
+// The row of numbered dots above the form. Discrete dots rather than a percentage
+// bar, and hidden from screen readers because the step heading already says
+// "Step 2 of 4" in words.
+
 import React from 'react';
 
-// Discrete dots, not a percentage bar: a bar that looks slow early drives people away.
-// aria-hidden because the step heading already says "Step 2 of 4" in words.
 const StepIndicator = ({ steps, currentIndex }) => (
   <ol className="step-indicator" aria-hidden="true">
     {steps.map((step, index) => {

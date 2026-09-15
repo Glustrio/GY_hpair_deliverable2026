@@ -1,3 +1,7 @@
+// The wizard. Owns the Formik instance for all four steps, the step index, the submit
+// status and the draft banner. One Formik rather than one per step, so the review
+// screen and the autosave can both see every answer.
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Formik, Form } from 'formik';
 import { useAuth } from '../contexts/AuthContext';
@@ -63,6 +67,10 @@ const MultiStepForm = () => {
 
   const handleLogout = useCallback(() => signOutUser(), []);
 
+  // The step gate, and the fiddliest thing in the app. Validates the whole form but
+  // only blocks on the current step's fields, since later steps are legitimately
+  // incomplete. Reads the errors from validateForm's return value, because
+  // formik.errors is still the previous render's copy at this point.
   const goNext = async (formik) => {
     const errors = await formik.validateForm();
     const { fields } = STEPS[stepIndex];
@@ -81,6 +89,8 @@ const MultiStepForm = () => {
     setStepIndex((current) => current + 1);
   };
 
+  // Maps the values to a document, writes it, then clears the draft. Order matters at
+  // every step, and the comments inside say why.
   const handleSubmit = async (values) => {
     // isSubmitting is state you render from, not a lock, so guard re-entry directly.
     if (status === 'submitting') return;
@@ -131,6 +141,8 @@ const MultiStepForm = () => {
     }
   };
 
+  // Clearing result unmounts the success screen, which remounts Formik with empty
+  // values, so there is nothing to reset by hand.
   const startAnother = () => {
     setResult(null);
     setStatus('idle');

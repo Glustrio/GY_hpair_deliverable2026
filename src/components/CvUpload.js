@@ -1,3 +1,6 @@
+// The CV upload. Saves the file, then reads its text and offers what it found, which
+// is why this step comes first in the wizard.
+
 import React, { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useField, useFormikContext } from 'formik';
@@ -57,6 +60,9 @@ const CvUpload = ({ userId }) => {
     (hasFile ? removeRef : chooseRef).current?.focus();
   }, [hasFile]);
 
+  // Validates, saves the file, then reads its text. react-dropzone passes rejected
+  // files in the second argument, and ignoring it is why a wrong file type used to
+  // report "choose a file" to someone who just had.
   const handleDrop = async (accepted, rejected) => {
     const file = accepted[0];
     if (!file) {

@@ -1,3 +1,6 @@
+// A calendar for picking a birthday. Month and year are native selects rather than
+// arrows, because arrows are 259 clicks back to 2005.
+
 import React, { useEffect, useRef, useState } from 'react';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -10,9 +13,6 @@ const daysIn = (year, month) => new Date(year, month + 1, 0).getDate();
 const startOffset = (year, month) => (new Date(year, month, 1).getDay() + 6) % 7;
 const clamp = (date, min, max) => (date < min ? min : date > max ? max : date);
 
-// Month and year are native selects rather than arrows. Stepping a month at a time
-// is 259 clicks back to a 2005 birthday, and a native select becomes the platform's
-// own wheel on a phone.
 const DatePicker = ({ value, min, max, onPick, onClose }) => {
   const [cursor, setCursor] = useState(() => clamp(value ?? new Date(max.getFullYear() - 18, 0, 1), min, max));
   const gridRef = useRef(null);

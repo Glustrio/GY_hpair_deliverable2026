@@ -1,3 +1,6 @@
+// Step four. Every answer, with Edit links back to the step that owns it, plus the
+// one optional demographic question.
+
 import React from 'react';
 import { useFormikContext } from 'formik';
 import FormField from '../FormField';

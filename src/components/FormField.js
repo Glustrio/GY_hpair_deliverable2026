@@ -1,7 +1,9 @@
+// One labelled input, with its hint, its error and the ARIA attributes that tie them
+// together. Exists so that wiring cannot drift between fields.
+
 import React from 'react';
 import { useField } from 'formik';
 
-// One component so the label, hint, error and ARIA wiring cannot drift between fields.
 const FormField = ({ label, name, as = 'input', hint, optional, children, ...rest }) => {
   const [field, meta, helpers] = useField(name);
   const showError = meta.touched && Boolean(meta.error);

@@ -1,3 +1,5 @@
+// Saves and restores a half finished application.
+
 import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 

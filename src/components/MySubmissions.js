@@ -1,3 +1,6 @@
+// Lists this user's own past submissions. The query is scoped server side, so there
+// is nothing to filter here.
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { getFormSubmissions } from '../services/firebaseService';
 

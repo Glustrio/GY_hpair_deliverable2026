@@ -1,3 +1,6 @@
+// Builds the PDF the applicant downloads after submitting. jsPDF is imported on
+// demand so it stays out of the main bundle.
+
 import { SUMMARY_SECTIONS, visibleRows, displayValue, genderLabel } from './submission';
 import { FIELDS } from '../validation/applicationSchema';
 
