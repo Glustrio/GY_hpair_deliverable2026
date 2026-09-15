@@ -12,6 +12,7 @@ import StepIndicator from './components/StepIndicator';
 import DatePicker from './components/DatePicker';
 import SubmissionSuccess from './components/SubmissionSuccess';
 import { applicationSchema, EMPTY_VALUES, STEPS } from './validation/applicationSchema';
+import { parseCv } from './utils/parseCv';
 
 // These tests are about what renders, not about uploading. Mocking the service keeps
 // the Firebase SDK's Node build (and its undici/stream polyfill needs) out of jsdom.
@@ -154,4 +155,54 @@ test('the language list covers the ISO 639-1 set, not a shortlist', () => {
     expect(html).toContain(`>${name}<`)
   );
   expect(html).toContain('>Another language<');
+});
+
+describe('parseCv', () => {
+  const CV = [
+    'Gordon Yu',
+    'gordonyu@college.harvard.edu | +1 617 555 0134',
+    '12 Oxford Street, Cambridge, MA 02138, USA',
+    'linkedin.com/in/gordon-yu',
+    '',
+    'EDUCATION',
+  ].join('\n');
+
+  test('pulls name, phone, address and LinkedIn out of CV text', () => {
+    expect(parseCv(CV)).toEqual({
+      firstName: 'Gordon',
+      lastName: 'Yu',
+      phone: '+1 617 555 0134',
+      address: '12 Oxford Street, Cambridge, MA 02138, USA',
+      linkedinUrl: 'linkedin.com/in/gordon-yu',
+    });
+  });
+
+  test('skips a CURRICULUM VITAE heading when looking for the name', () => {
+    expect(parseCv('CURRICULUM VITAE\n\nMaria Garcia Lopez\n+44 20 7183 8750')).toMatchObject({
+      firstName: 'Maria',
+      lastName: 'Lopez',
+    });
+  });
+
+  test('does not run a phone match past the end of its line', () => {
+    // The house number below used to get appended to the phone number.
+    const { phone } = parseCv('Gordon Yu\n+1 617 555 0134\n12 Oxford Street, Cambridge');
+    expect(phone).toBe('+1 617 555 0134');
+  });
+
+  test('does not mistake a run of years for a phone number', () => {
+    expect(parseCv('Sam Patel\nHarvard University 2021 2025').phone).toBeUndefined();
+  });
+
+  test('returns nothing rather than guessing when there is no contact block', () => {
+    expect(parseCv('SKILLS\nPython, React\nEDUCATION\nHarvard')).toEqual({});
+  });
+
+  test('handles accented names and non-US numbers', () => {
+    expect(parseCv('José García\n+34 91 123 4567')).toMatchObject({
+      firstName: 'José',
+      lastName: 'García',
+      phone: '+34 91 123 4567',
+    });
+  });
 });

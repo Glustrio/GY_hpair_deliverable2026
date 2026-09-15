@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { useField } from 'formik';
+import { useField, useFormikContext } from 'formik';
 import { FIELDS, CV_CONTENT_TYPE, MAX_CV_BYTES } from '../validation/applicationSchema';
 import { uploadCv, rejectionReason } from '../services/cvService';
+import { readPdfText } from '../utils/readPdfText';
+import { parseCv } from '../utils/parseCv';
 
 // react-dropzone reports why it turned a file away as a code. Its own messages quote
 // raw MIME types and byte counts, so they are replaced here.
@@ -19,8 +21,18 @@ const messageForRejection = (rejection) => {
   }
 };
 
+const SUGGESTION_LABELS = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  phone: 'Phone number',
+  address: 'Home address',
+  linkedinUrl: 'LinkedIn',
+};
+
 const CvUpload = ({ userId }) => {
   const [field, meta, helpers] = useField(FIELDS.cv);
+  const { setFieldValue } = useFormikContext();
+  const [suggestions, setSuggestions] = useState(null);
   const [progress, setProgress] = useState(null);
   const [uploadError, setUploadError] = useState('');
 
@@ -67,6 +79,7 @@ const CvUpload = ({ userId }) => {
     try {
       helpers.setValue(await uploadCv(file, userId, setProgress));
       wantsFocus.current = true;
+      readAndSuggest(file);
     } catch (error) {
       setUploadError(error.message);
       helpers.setValue(null);
@@ -89,9 +102,28 @@ const CvUpload = ({ userId }) => {
     noKeyboard: true,
   });
 
+  // Never fills anything in by itself. A CV is not a form, and a wrong guess silently
+  // written into an application is worse than no guess at all.
+  const readAndSuggest = async (file) => {
+    try {
+      const found = parseCv(await readPdfText(file));
+      if (Object.keys(found).length) setSuggestions(found);
+    } catch (error) {
+      // Reading the text is a convenience. The upload already succeeded.
+      console.error('Could not read the CV text:', error);
+    }
+  };
+
+  const applySuggestions = () => {
+    Object.entries(suggestions).forEach(([name, value]) => setFieldValue(name, value));
+    if (suggestions.linkedinUrl) setFieldValue(FIELDS.hasLinkedin, 'yes');
+    setSuggestions(null);
+  };
+
   const removeFile = () => {
     helpers.setValue(null);
     setUploadError('');
+    setSuggestions(null);
     wantsFocus.current = true;
   };
 
@@ -163,6 +195,33 @@ const CvUpload = ({ userId }) => {
       <p className="visually-hidden" role="status">
         {isDragActive ? 'File over the drop zone. Release to upload.' : ''}
       </p>
+
+      {suggestions && (
+        <div className="submit-message info cv-suggestions" role="status">
+          <p>
+            <strong>Found these in your CV.</strong> Check them before you use them.
+          </p>
+          <ul>
+            {Object.entries(suggestions).map(([name, value]) => (
+              <li key={name}>
+                <span className="summary-label">{SUGGESTION_LABELS[name]}</span> {value}
+              </li>
+            ))}
+          </ul>
+          <div className="draft-banner-actions">
+            <button type="button" className="btn btn-primary btn-small" onClick={applySuggestions}>
+              Fill these in
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => setSuggestions(null)}
+            >
+              No thanks
+            </button>
+          </div>
+        </div>
+      )}
 
       {showError && (
         <p className="form-error" id="cv-error">
