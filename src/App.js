@@ -25,8 +25,12 @@ function App() {
     <AuthProvider>
       <div className="App">
         <header className="App-header">
-          {/* The only h1 on the page. Each step uses the heading below it. */}
-          <h1>HPAIR Application</h1>
+          {/* The h1 text is visually hidden rather than removed, so the page still has
+              a real heading for screen readers and the logo is not the only label. */}
+          <h1>
+            <img src={`${process.env.PUBLIC_URL}/hpair-logo.webp`} alt="HPAIR" height="34" />
+            <span className="visually-hidden">HPAIR Application</span>
+          </h1>
         </header>
         <main>
           <ProtectedRoute>

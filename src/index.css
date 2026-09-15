@@ -5,9 +5,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f5f5;
@@ -59,7 +58,7 @@ code {
 }
 
 .step-number.active {
-  background-color: #0b5ed7;
+  background-color: #960819;
   color: white;
 }
 
@@ -106,12 +105,12 @@ code {
 }
 
 .btn-primary {
-  background-color: #0b5ed7;
+  background-color: #960819;
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #0a58ca;
+  background-color: #7a0614;
 }
 
 .btn-secondary {
@@ -148,9 +147,9 @@ code {
 }
 
 .form-input:focus-visible {
-  outline: 3px solid #0b5ed7;
+  outline: 3px solid #960819;
   outline-offset: 1px;
-  border-color: #0b5ed7;
+  border-color: #960819;
 }
 
 .form-error {
@@ -168,7 +167,7 @@ code {
 }
 
 .file-upload-area.dragover {
-  border-color: #0b5ed7;
+  border-color: #960819;
   background-color: #e3f2fd;
 }
 
@@ -221,7 +220,7 @@ code {
 
 .progress-fill {
   height: 100%;
-  background-color: #0b5ed7;
+  background-color: #960819;
   transition: width 0.3s ease;
 }
 
@@ -358,7 +357,7 @@ code {
   background: none;
   border: none;
   padding: 0;
-  color: #0b5ed7;
+  color: #960819;
   font-size: inherit;
   text-decoration: underline;
   cursor: pointer;
@@ -475,7 +474,7 @@ code {
   padding: 4px;
   background: none;
   border: none;
-  color: #0b5ed7;
+  color: #960819;
   font-size: 14px;
   text-decoration: underline;
   cursor: pointer;
@@ -521,7 +520,7 @@ code {
 }
 
 .file-upload-area.dragover {
-  border-color: #0b5ed7;
+  border-color: #960819;
   background-color: #e3f2fd;
 }
 
@@ -537,7 +536,7 @@ code {
 /* Keyboard users get a ring, mouse users do not, which is the reason people delete
    outlines in the first place. */
 :focus-visible {
-  outline: 3px solid #0b5ed7;
+  outline: 3px solid #960819;
   outline-offset: 2px;
 }
 
@@ -680,7 +679,7 @@ code {
 }
 
 .datepicker-grid td.selected {
-  background-color: #0b5ed7;
+  background-color: #960819;
   color: white;
   font-weight: 600;
 }
