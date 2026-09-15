@@ -1,7 +1,8 @@
 # HPAIR Deliverable: Personal Information Form
 
-A four-step application form with per-step validation, a conditional question, a PDF CV
-upload, autosave, and a review screen before submitting.
+A four-step application form. It starts by reading your uploaded CV and offering to fill
+in what it finds, then validates each step as you go, saves your progress, and shows you
+every answer before you submit.
 
 Built on the starter's React 18 + Formik + Yup + Firebase stack.
 
@@ -15,33 +16,57 @@ npm run build # must pass with CI=true, which is what Vercel sets
 ```
 
 To point it at your own Firebase project, replace the config block in
-`src/firebase/config.js` and publish `firestore.rules` in the console.
+`src/firebase/config.js`, then deploy the rules and the index from the repo:
+
+```bash
+npx firebase-tools login
+npx firebase-tools deploy --only firestore
+```
+
+Deploying rather than pasting into the console means the file in git is the one that is
+live. The submissions query needs a composite index, which that command also creates.
+
+Emailing a copy needs a `RESEND_API_KEY` environment variable on the deployment. Without
+it the endpoint says so rather than failing silently, and everything else works. The key is
+deliberately not in the repo, which is the whole reason the send goes through a serverless
+function instead of the browser.
 
 ## What it does
 
-**Validation.** Errors appear when you press Continue, then clear live as you fix them.
-You cannot reach the next step, or submit, until the current step is valid.
+**Reads your CV.** Upload a PDF on the first step and it extracts the text, then offers the
+name, phone, address and LinkedIn URL it can find. It suggests and never fills, because a
+wrong guess written silently into an application is worse than no guess. Patterns rather
+than a language model, so there is no API key and no per-upload cost.
 
-**Fields.** Name, date of birth, country of citizenship, home address, phone, preferred
-language, CV, and LinkedIn. The LinkedIn URL is only asked if you say you have one. The CV
-is a PDF up to 800 KB.
+**Validation.** Nothing fires until you press Continue, and separately on blur but only for
+a field you have actually typed in. Tab past an empty box and it stays quiet. Once a field
+has failed it re-checks on every keystroke, so the message clears as soon as it is fixed.
 
-**Submission.** A confirmation screen with a reference number, the full summary on screen,
-and a downloadable copy. Failures keep your answers and say what went wrong.
+**Fields.** Name, date of birth, nationality, home address, phone, preferred language, CV
+and LinkedIn. Two of them are conditional: the LinkedIn URL is only asked if you say you
+have one, and picking a language outside the list reveals a box to name it. Nationality is a
+closed list of 249 ISO country codes, and the language list is the full ISO 639-1 set.
+
+**Date of birth.** Three text boxes that accept a month name as well as a number, with an
+optional calendar whose month and year are dropdowns rather than arrows.
+
+**Submission.** A confirmation screen with a reference number, the full summary on screen, a
+PDF download, and an option to email a copy. Failures keep your answers and say what went
+wrong.
 
 **Autosave.** Progress saves to your account about a second after you stop typing, and is
 offered back on your next visit. It clears only once a submission is confirmed.
 
 ## Decisions worth explaining
 
-**Validation fires on Continue, not on blur.** The brief asks for real-time validation, and
-the research on when to fire it is not on the side of the obvious reading. Bargas-Avila et
-al. (2007, n=90) found validating when a user leaves a field produced roughly double the
-repeat errors of validating on submit, and GOV.UK's pattern says plainly not to validate on
-blur. So errors surface when you try to leave a step, and from then on that field
-re-validates on every keystroke so the message disappears the moment it is fixed. Formik's
-`validateOnBlur` default is what makes errors appear on blur, so `FormField` deliberately
-does not pass Formik's `onBlur` handler through to the input.
+**Validation does not fire on an empty field you tabbed past.** The brief asks for real-time
+validation, and the research on when to fire it does not support the obvious reading.
+Bargas-Avila et al. (2007, n=90) found that validating when a user leaves a field produced
+roughly double the repeat errors of validating on submit, and GOV.UK's pattern says plainly
+not to validate on blur. So errors appear when you press Continue, and on blur only for a
+field you have actually typed something into. Formik's `handleBlur` marks every field
+touched, which is what makes errors appear on an empty box, so `FormField` replaces it with
+one that checks for a value first.
 
 **The Continue button is never disabled.** A greyed-out button explains nothing, drops out
 of the tab order, and leaves a keyboard user with no way to find out what is wrong. Pressing
@@ -83,6 +108,15 @@ server, and that the CV document id starts with your own uid. It does not re-che
 because that would duplicate Yup in a language with no tests and no message the user ever
 sees, where the only failure mode is silently rejecting a valid application.
 
+**The email goes through a serverless function.** `api/send-summary.js` runs on Vercel
+rather than in the browser, because the email provider's key has to stay secret and a
+client-side app cannot hold one. It verifies the caller's Firebase ID token before sending;
+without that check it is an open relay that anyone could use to send mail from this domain.
+It is rate limited to five an hour per user, counted after the token check so nobody can
+burn a real user's quota by guessing their uid. That limit lives in memory on the function,
+so each instance counts separately and it is not a hard cap. A durable one needs shared
+storage, which is more infrastructure than this form justifies.
+
 **Drafts live in the database, not the browser.** The form holds a date of birth, a home
 address and a phone number. Browser storage has no expiry and is not cleared on sign out, so
 on a shared machine it leaves one applicant's details for the next person.
@@ -103,9 +137,6 @@ on a shared machine it leaves one applicant's details for the next person.
   installed and unused.
 
 ## Not built, and why
-
-**Emailing the submission.** It needs somewhere server-side to hold mail credentials, which
-means a Cloud Function. Sending mail from the browser would ship an API key to every visitor.
 
 **A route per wizard step.** The browser Back button currently leaves the form rather than
 stepping back. Autosave means nothing is lost, but one route per step is the better answer
