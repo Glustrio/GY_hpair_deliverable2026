@@ -33,12 +33,14 @@ service cloud.firestore {
       function hasExpectedKeys() {
         return request.resource.data.keys().hasAll([
                  'userId', 'userEmail', 'firstName', 'lastName', 'dateOfBirth',
-                 'citizenship', 'address', 'phone', 'preferredLanguage', 'cv',
+                 'citizenship', 'address', 'phone', 'preferredLanguage',
+                 'preferredLanguageOther', 'cv',
                  'hasLinkedin', 'linkedinUrl', 'gender', 'submittedAt'
                ])
             && request.resource.data.keys().hasOnly([
                  'userId', 'userEmail', 'firstName', 'lastName', 'dateOfBirth',
-                 'citizenship', 'address', 'phone', 'preferredLanguage', 'cv',
+                 'citizenship', 'address', 'phone', 'preferredLanguage',
+                 'preferredLanguageOther', 'cv',
                  'hasLinkedin', 'linkedinUrl', 'gender', 'submittedAt'
                ])
             && request.resource.data.cv.keys().hasOnly([

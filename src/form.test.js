@@ -139,3 +139,19 @@ test('DatePicker marks exactly one cell selected and one tabbable', () => {
   expect(html.match(/tabindex="0"/g)).toHaveLength(1);
   expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
 });
+
+test('ContactStep reveals a text box when the language is not in the list', () => {
+  expect(inForm(<ContactStep />, { ...FILLED, preferredLanguage: 'en' }))
+    .not.toContain('Which language?');
+  const html = inForm(<ContactStep />, { ...FILLED, preferredLanguage: 'other' });
+  expect(html).toContain('Which language?');
+  expect(html).toContain('id="preferredLanguageOther"');
+});
+
+test('the language list covers the ISO 639-1 set, not a shortlist', () => {
+  const html = inForm(<ContactStep />);
+  ['Filipino', 'Swahili', 'Welsh', 'Bangla', 'Yoruba'].forEach((name) =>
+    expect(html).toContain(`>${name}<`)
+  );
+  expect(html).toContain('>Another language<');
+});

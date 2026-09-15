@@ -38,6 +38,9 @@ export const toSubmission = (values, user) => ({
   address: values[FIELDS.address].trim(),
   phone: values[FIELDS.phone].trim(),
   preferredLanguage: values[FIELDS.preferredLanguage],
+  // Empty string rather than omitted, so the document shape is always the same.
+  preferredLanguageOther:
+    values[FIELDS.preferredLanguage] === 'other' ? values[FIELDS.preferredLanguageOther].trim() : '',
 
   cv: values[FIELDS.cv],
 
@@ -71,7 +74,13 @@ export const SUMMARY_SECTIONS = [
     rows: [
       { label: 'Home address', value: (v) => v[FIELDS.address] },
       { label: 'Phone number', value: (v) => v[FIELDS.phone] },
-      { label: 'Preferred language', value: (v) => languageName(v[FIELDS.preferredLanguage]) },
+      {
+        label: 'Preferred language',
+        value: (v) =>
+          v[FIELDS.preferredLanguage] === 'other'
+            ? v[FIELDS.preferredLanguageOther]
+            : languageName(v[FIELDS.preferredLanguage]),
+      },
     ],
   },
   {

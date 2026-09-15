@@ -15,6 +15,7 @@ export const FIELDS = {
   address: 'address',
   phone: 'phone',
   preferredLanguage: 'preferredLanguage',
+  preferredLanguageOther: 'preferredLanguageOther',
   cv: 'cv',
   hasLinkedin: 'hasLinkedin',
   linkedinUrl: 'linkedinUrl',
@@ -38,6 +39,7 @@ export const EMPTY_VALUES = {
   address: '',
   phone: '',
   preferredLanguage: '',
+  preferredLanguageOther: '',
   cv: null,
   hasLinkedin: '',
   linkedinUrl: '',
@@ -207,6 +209,16 @@ export const applicationSchema = Yup.object({
     .required('Select the language you would prefer we contact you in.')
     .oneOf(LANGUAGE_CODES, 'Select the language you would prefer we contact you in.'),
 
+  preferredLanguageOther: Yup.string().when('preferredLanguage', {
+    is: 'other',
+    then: (schema) =>
+      schema
+        .trim()
+        .required('Tell us which language you would prefer.')
+        .max(60, 'That language name is too long.'),
+    otherwise: (schema) => schema,
+  }),
+
   // Holds the metadata returned by the upload, never a File. Guarded so an
   // unexpected shape produces a message instead of throwing inside Yup.
   cv: Yup.mixed()
@@ -250,7 +262,12 @@ export const STEPS = [
   {
     id: 'contact',
     title: 'Contact details',
-    fields: [FIELDS.address, FIELDS.phone, FIELDS.preferredLanguage],
+    fields: [
+      FIELDS.address,
+      FIELDS.phone,
+      FIELDS.preferredLanguage,
+      FIELDS.preferredLanguageOther,
+    ],
   },
   {
     id: 'documents',
