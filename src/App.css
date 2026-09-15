@@ -1,14 +1,7 @@
-/* Only the header is centred. The starter centred the whole app, so every label
-   and error inside the form inherited it. */
 .App-header {
-  padding: 28px 20px 4px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #282c34;
+  color: white;
   text-align: center;
-}
-
-.App-header h1 {
-  color: #a51c30;
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
 }
