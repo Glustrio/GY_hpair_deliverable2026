@@ -916,14 +916,33 @@ code {
 
 .ticket {
   position: relative;
-  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  /* A shorter perspective exaggerates the rotation, which is what makes it read as a
+     physical card rather than a slightly skewed rectangle. */
+  transform: perspective(620px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+    scale(var(--tilt-scale, 1));
   transform-style: preserve-3d;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.3s ease;
 }
 
 .ticket:hover {
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+  --tilt-scale: 1.035;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.42);
 }
+
+/* No transition while the cursor is on it, so the card tracks the pointer exactly
+   instead of trailing a quarter second behind. The transition returns on the way out,
+   so it settles rather than snapping flat. */
+.ticket-tracking {
+  transition: box-shadow 0.3s ease;
+}
+
+/* Lifted off the card so they catch the rotation, which is where the depth comes from. */
+.ticket-name,
+.ticket-event {
+  transform: translateZ(26px);
+}
+
 
 /* A highlight that follows the cursor. pointer-events:none so it never eats a click. */
 .ticket-shine {
@@ -934,11 +953,11 @@ code {
   opacity: 0;
   pointer-events: none;
   background: radial-gradient(
-    380px circle at var(--shine-x, 50%) var(--shine-y, 50%),
+    300px circle at var(--shine-x, 50%) var(--shine-y, 50%),
     rgba(255, 255, 255, 0.12),
-    transparent 62%
+    transparent 58%
   );
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 .ticket:hover .ticket-shine {
@@ -947,7 +966,14 @@ code {
 
 /* The tilt is the one piece of motion here that could actually bother someone. */
 @media (prefers-reduced-motion: reduce) {
-  .ticket {
+  .ticket,
+  .ticket:hover {
+    transform: none !important;
+  }
+
+  .ticket-name,
+  .ticket-event,
+  .ticket-stub {
     transform: none !important;
   }
 

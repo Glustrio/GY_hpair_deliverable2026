@@ -1,37 +1,60 @@
 // The applicant's answers as a conference ticket, filling in live as they type. Before
 // submitting it is a preview with a placeholder reference; after, it carries the real
 // one and a QR code.
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { FIELDS } from '../validation/applicationSchema';
 import { countryName, languageName } from '../utils/submission';
 
 const blank = '—';
-const MAX_TILT = 7;
+const MAX_TILT = 14;
 
-// Tilts toward the cursor and moves a sheen with it. Written as CSS custom properties
-// rather than inline transforms, so the stylesheet can switch the whole effect off
-// under prefers-reduced-motion instead of this file needing to know about it.
+// Tilts toward the cursor and moves a highlight with it. Position goes out as CSS
+// custom properties, so the stylesheet owns the effect and can switch it off under
+// prefers-reduced-motion without this file knowing that setting exists.
 const useTilt = () => {
   const ref = useRef(null);
+  const frame = useRef(null);
+  const [tracking, setTracking] = useState(false);
 
   const onMouseMove = (event) => {
     const box = ref.current?.getBoundingClientRect();
     if (!box) return;
     const x = (event.clientX - box.left) / box.width;
     const y = (event.clientY - box.top) / box.height;
-    ref.current.style.setProperty('--tilt-y', `${(x - 0.5) * 2 * MAX_TILT}deg`);
-    ref.current.style.setProperty('--tilt-x', `${(0.5 - y) * 2 * MAX_TILT}deg`);
-    ref.current.style.setProperty('--shine-x', `${x * 100}%`);
-    ref.current.style.setProperty('--shine-y', `${y * 100}%`);
+
+    // One write per frame. mousemove fires far faster than the screen refreshes, and
+    // without this every event triggers its own style recalculation.
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      const el = ref.current;
+      if (!el) return;
+      el.style.setProperty('--tilt-y', `${(x - 0.5) * 2 * MAX_TILT}deg`);
+      el.style.setProperty('--tilt-x', `${(0.5 - y) * 2 * MAX_TILT}deg`);
+      el.style.setProperty('--shine-x', `${x * 100}%`);
+      el.style.setProperty('--shine-y', `${y * 100}%`);
+    });
   };
 
   const onMouseLeave = () => {
-    ref.current?.style.removeProperty('--tilt-y');
-    ref.current?.style.removeProperty('--tilt-x');
+    cancelAnimationFrame(frame.current);
+    setTracking(false);
+    const el = ref.current;
+    if (!el) return;
+    el.style.removeProperty('--tilt-y');
+    el.style.removeProperty('--tilt-x');
   };
 
-  return { ref, onMouseMove, onMouseLeave };
+  // While tracking, the transition is removed so the tilt follows the cursor exactly
+  // rather than trailing behind it. It comes back on the way out, so the card settles
+  // instead of snapping flat.
+  return {
+    ref,
+    onMouseMove,
+    onMouseEnter: () => setTracking(true),
+    onMouseLeave,
+    className: tracking ? ' ticket-tracking' : '',
+  };
 };
 
 const TicketPreview = ({ reference, qr, values: given }) => {
@@ -46,9 +69,10 @@ const TicketPreview = ({ reference, qr, values: given }) => {
 
   return (
     <div
-      className={`ticket${reference ? ' ticket-issued' : ''}`}
+      className={`ticket${reference ? ' ticket-issued' : ''}${tilt.className}`}
       ref={tilt.ref}
       onMouseMove={tilt.onMouseMove}
+      onMouseEnter={tilt.onMouseEnter}
       onMouseLeave={tilt.onMouseLeave}
     >
       <div className="ticket-shine" aria-hidden="true" />
