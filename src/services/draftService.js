@@ -3,15 +3,11 @@ import { db } from '../firebase/config';
 
 const COLLECTION_NAME = 'drafts';
 
-// A draft is data at rest against a schema that can still change. Bump this when
-// field names change so an old draft is discarded instead of restored into a form
-// whose fields no longer match.
+// Bump when field names change, so old drafts are discarded rather than restored.
 const DRAFT_VERSION = 1;
 
-// Stored against the signed-in account rather than in the browser. The form holds a
-// date of birth, a home address and a phone number, and browser storage has no
-// expiry, is not cleared on sign out, and is readable by anyone with the profile
-// directory. On a shared machine that leaves one applicant's details for the next.
+// On the account, not in the browser. This holds a home address, and browser storage
+// has no expiry and is not cleared on sign out.
 export const saveDraft = async (userId, values, stepIndex) => {
   try {
     await setDoc(doc(db, COLLECTION_NAME, userId), {

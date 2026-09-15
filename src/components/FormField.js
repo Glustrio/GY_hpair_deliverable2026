@@ -1,28 +1,27 @@
 import React from 'react';
 import { useField } from 'formik';
 
-// One component so the label, hint, error and ARIA attributes are wired the same way
-// every time. Copy-pasting eight attributes per field is where the inconsistencies
-// come from, and a broken aria-describedby is invisible until someone tests with a
-// screen reader.
+// One component so the label, hint, error and ARIA wiring cannot drift between fields.
 const FormField = ({ label, name, as = 'input', hint, optional, children, ...rest }) => {
-  const [field, meta] = useField(name);
+  const [field, meta, helpers] = useField(name);
   const showError = meta.touched && Boolean(meta.error);
 
   const hintId = `${name}-hint`;
   const errorId = `${name}-error`;
-  // Only reference ids that are actually in the DOM. Assistive tech drops a
-  // reference to a missing element, so a permanently rendered hidden error is a no-op.
+  // Only reference ids that exist: assistive tech drops a reference to a missing node.
   const describedBy = [hint && hintId, showError && errorId].filter(Boolean).join(' ');
 
-  // onBlur is deliberately not passed on. Formik's handleBlur marks the field
-  // touched, which is what makes an error appear the moment you leave a field.
-  // Errors here appear when you press Continue, then clear live as you fix them.
+  // Formik's own handleBlur marks every field touched, which shouts at someone who
+  // tabbed past an empty box. This only reports a field they actually typed in.
   const { onBlur, ...inputProps } = field;
+  const handleBlur = () => {
+    if (field.value) helpers.setTouched(true);
+  };
 
   const shared = {
     ...inputProps,
     ...rest,
+    onBlur: handleBlur,
     id: name,
     className: showError ? 'form-input has-error' : 'form-input',
     'aria-required': optional ? undefined : true,

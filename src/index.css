@@ -571,3 +571,131 @@ code {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- sign in ---- */
+
+.container-narrow {
+  max-width: 460px;
+}
+
+.auth-intro {
+  margin-bottom: 24px;
+  color: #565e64;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.auth-switch {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+.auth-switch p {
+  margin-top: 12px;
+}
+
+/* ---- date of birth ---- */
+
+.dob-part .form-label {
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #565e64;
+}
+
+/* Wider than the digits need, so the boxes read as one group rather than
+   three unrelated inputs. */
+.dob-inputs input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+/* Echoes back the date we understood, which matters because the month box
+   accepts names as well as numbers. */
+.dob-echo {
+  margin-top: 8px;
+  color: #146c43;
+  font-size: 14px;
+}
+
+/* ---- date picker ---- */
+
+.dob-picker {
+  position: relative;
+  margin-top: 12px;
+}
+
+.datepicker {
+  position: absolute;
+  z-index: 10;
+  top: 28px;
+  left: 0;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  padding: 16px;
+  background: white;
+  border: 1px solid #767676;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.datepicker-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.datepicker-header select {
+  padding: 8px;
+  font-size: 15px;
+}
+
+.datepicker-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.datepicker-grid th {
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #565e64;
+}
+
+.datepicker-grid td {
+  /* 44px rows keep the tap targets usable on a phone. */
+  height: 40px;
+  text-align: center;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.datepicker-grid td:hover:not(.empty):not(.outside) {
+  background-color: #e3f2fd;
+}
+
+.datepicker-grid td.selected {
+  background-color: #0b5ed7;
+  color: white;
+  font-weight: 600;
+}
+
+.datepicker-grid td.outside {
+  color: #949494;
+  cursor: not-allowed;
+}
+
+.datepicker-grid td.empty {
+  cursor: default;
+}
+
+.datepicker-hint {
+  margin-top: 10px;
+  color: #565e64;
+  font-size: 13px;
+}

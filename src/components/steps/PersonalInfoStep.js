@@ -11,11 +11,14 @@ const PersonalInfoStep = () => (
 
     <DateOfBirthField />
 
-    {/* Labelled citizenship rather than nationality because the list holds country
-        names, so "Nationality: Japan" would be a question and answer that disagree.
-        No autocomplete attribute: the spec defines country as part of an address, so
-        a browser would fill in where the applicant lives, not where they are a citizen. */}
-    <FormField name={FIELDS.citizenship} label="Country of citizenship" as="select">
+    {/* No autocomplete attribute: the HTML spec defines country as part of an address,
+        so a browser would fill in where someone lives, not where they hold citizenship. */}
+    <FormField
+      name={FIELDS.citizenship}
+      label="Nationality"
+      as="select"
+      hint="The country where you hold citizenship."
+    >
       <option value="">Select a country</option>
       {COUNTRIES.map((country) => (
         <option key={country.code} value={country.code}>

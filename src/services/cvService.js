@@ -2,13 +2,11 @@ import { doc, setDoc, Bytes } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { MAX_CV_BYTES, CV_CONTENT_TYPE } from '../validation/applicationSchema';
 
-// The PDF lives in its own collection rather than inside the submission. A
-// submission document is read every time the "Your applications" list renders, and
-// nobody wants to download fifty CVs to show fifty reference numbers.
+// Own collection, not inside the submission: the applications list would otherwise
+// download every CV to render a list of reference numbers.
 const COLLECTION_NAME = 'cvFiles';
 
-// Firestore stores a bytes field at its real size. Base64 would have added a third
-// on top, against a hard 1 MiB ceiling for the whole document.
+// Bytes, not base64: base64 would add a third against a 1 MiB document ceiling.
 const readAsBytes = (file, onProgress) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -31,8 +29,7 @@ export const rejectionReason = (file) => {
   return null;
 };
 
-// The document id carries the owner's uid, so the security rule on submissions can
-// check that an applicant is attaching their own CV without reading another document.
+// The uid prefix lets firestore.rules verify ownership without a second read.
 export const uploadCv = async (file, userId, onProgress) => {
   const cvDocId = `${userId}_${crypto.randomUUID()}`;
   const bytes = await readAsBytes(file, onProgress);

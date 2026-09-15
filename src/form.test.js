@@ -9,6 +9,7 @@ import ContactStep from './components/steps/ContactStep';
 import DocumentsStep from './components/steps/DocumentsStep';
 import ReviewStep from './components/steps/ReviewStep';
 import StepIndicator from './components/StepIndicator';
+import DatePicker from './components/DatePicker';
 import SubmissionSuccess from './components/SubmissionSuccess';
 import { applicationSchema, EMPTY_VALUES, STEPS } from './validation/applicationSchema';
 
@@ -37,7 +38,7 @@ const inForm = (node, values = EMPTY_VALUES) =>
 
 test('PersonalInfoStep renders with the country list', () => {
   const html = inForm(<PersonalInfoStep />);
-  expect(html).toContain('Country of citizenship');
+  expect(html).toContain('Nationality');
   expect(html).toContain('Afghanistan');
   expect(html).toContain('Kosovo');
   expect(html).not.toContain('Antarctica');
@@ -104,4 +105,37 @@ test('SubmissionSuccess shows the reference and the answers', () => {
   expect(html).toContain('AB12CD34');
   expect(html).toContain('Application sent');
   expect(html).toContain('Gordon');
+});
+
+test('DatePicker offers month and year selects, not month arrows', () => {
+  const html = renderToString(
+    <DatePicker
+      value={new Date(2005, 2, 27)}
+      min={new Date(1906, 0, 1)}
+      max={new Date(2013, 0, 1)}
+      onPick={() => {}}
+      onClose={() => {}}
+    />
+  );
+  expect(html).toContain('id="dp-month"');
+  expect(html).toContain('id="dp-year"');
+  expect(html).toContain('>March<');
+  expect(html).toContain('>1906<');
+  expect(html).toContain('>2013<');
+  expect(html).toContain('role="grid"');
+});
+
+test('DatePicker marks exactly one cell selected and one tabbable', () => {
+  const html = renderToString(
+    <DatePicker
+      value={new Date(2005, 2, 27)}
+      min={new Date(1906, 0, 1)}
+      max={new Date(2013, 0, 1)}
+      onPick={() => {}}
+      onClose={() => {}}
+    />
+  );
+  // Roving tabindex: the grid must be a single tab stop.
+  expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+  expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
 });

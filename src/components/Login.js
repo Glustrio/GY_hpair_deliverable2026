@@ -1,50 +1,58 @@
 import React, { useState } from 'react';
-import { signInUser, registerUser } from '../services/authService';
+import { signInUser, registerUser, resetPassword } from '../services/authService';
+
+const COPY = {
+  login: { title: 'Sign in', action: 'Sign in', busy: 'Signing in' },
+  register: { title: 'Create an account', action: 'Create account', busy: 'Creating' },
+  reset: { title: 'Reset your password', action: 'Send reset link', busy: 'Sending' },
+};
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [result, setResult] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const copy = COPY[mode];
+  const isReset = mode === 'reset';
+
+  const go = (next) => {
+    setMode(next);
+    setResult(null);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
-    setMessage('');
+    setResult(null);
 
-    try {
-      let result;
-      if (isLogin) {
-        result = await signInUser(email, password);
-      } else {
-        result = await registerUser(email, password);
-      }
+    const run =
+      mode === 'login' ? signInUser(email, password)
+      : mode === 'register' ? registerUser(email, password)
+      : resetPassword(email);
 
-      setMessage(result.message);
-    } catch (error) {
-      setMessage('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    setResult(await run);
+    setLoading(false);
   };
 
   return (
-    <div className="container">
+    <div className="container container-narrow">
       <div className="form-container">
-        <h2>{isLogin ? 'Sign in' : 'Create an account'}</h2>
-        <p>{isLogin ? 'Sign in to access the form challenge' : 'Create an account to get started'}</p>
+        <h2>{copy.title}</h2>
+        <p className="auth-intro">
+          {isReset
+            ? 'Enter your email and we will send you a link.'
+            : 'You need an account so you can save your progress and come back to it.'}
+        </p>
 
-        {message && (
-          <div
-            role="alert"
-            className={`submit-message ${message.includes('successful') ? 'success' : 'error'}`}
-          >
-            {message}
+        {result && (
+          <div role="alert" className={`submit-message ${result.success ? 'success' : 'error'}`}>
+            {result.message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="email">
               Email address
@@ -61,54 +69,57 @@ const Login = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <p className="form-hint" id="password-hint">
-              At least 6 characters.
-            </p>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              // current-password on sign in, new-password on register, so a password
-              // manager offers to save a new one rather than autofilling the old one.
-              autoComplete={isLogin ? 'current-password' : 'new-password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              aria-describedby="password-hint"
-              required
-              minLength={6}
-            />
-          </div>
+          {!isReset && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="password">
+                Password
+              </label>
+              <p className="form-hint" id="password-hint">
+                At least 6 characters.
+              </p>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                // new-password on register so a manager offers to save one rather
+                // than autofilling the old one.
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="form-input"
+                aria-describedby="password-hint"
+                required
+                minLength={6}
+              />
+            </div>
+          )}
 
           <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
+            <button type="submit" className="btn btn-primary btn-block" aria-disabled={loading}>
+              {loading ? copy.busy : copy.action}
             </button>
           </div>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <p>
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setMessage('');
-              }}
-              className="btn-link"
-            >
-              {isLogin ? 'Register here' : 'Login here'}
+        <div className="auth-switch">
+          {mode === 'login' && (
+            <>
+              <button type="button" className="btn-link" onClick={() => go('reset')}>
+                Forgot your password?
+              </button>
+              <p>
+                No account yet?{' '}
+                <button type="button" className="btn-link" onClick={() => go('register')}>
+                  Create one
+                </button>
+              </p>
+            </>
+          )}
+          {mode !== 'login' && (
+            <button type="button" className="btn-link" onClick={() => go('login')}>
+              Back to sign in
             </button>
-          </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 // Authentication service using Firebase Auth
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  onAuthStateChanged,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
@@ -41,6 +42,17 @@ export const signInUser = async (email, password) => {
       message: getErrorMessage(error.code) 
     };
   }
+};
+
+// Always reports success, so the response cannot be used to discover which
+// addresses have accounts.
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error('Password reset error:', error);
+  }
+  return { success: true, message: 'If that email has an account, a reset link is on its way.' };
 };
 
 // Sign out user
