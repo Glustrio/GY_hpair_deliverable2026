@@ -9,6 +9,8 @@ import ContactStep from './components/steps/ContactStep';
 import ReviewStep from './components/steps/ReviewStep';
 import StepIndicator from './components/StepIndicator';
 import DatePicker from './components/DatePicker';
+import TicketPreview from './components/TicketPreview';
+import { QRCodeSVG } from 'qrcode.react';
 import SubmissionSuccess from './components/SubmissionSuccess';
 import { applicationSchema, EMPTY_VALUES, STEPS } from './validation/applicationSchema';
 import { parseCv } from './utils/parseCv';
@@ -231,4 +233,32 @@ test('the confirmation screen offers to email a copy, prefilled with the account
   expect(html).toContain('Email yourself a copy');
   expect(html).toContain('gordon@example.edu');
   expect(html).toContain('Download a copy (PDF)');
+});
+
+test('the ticket mirrors form values while the form is open', () => {
+  const html = inForm(<TicketPreview />, FILLED);
+  expect(html).toContain('Gordon Yu');
+  expect(html).toContain('United States');
+  expect(html).toContain('cv.pdf');
+  // No reference until it is submitted.
+  expect(html).toContain('PENDING');
+});
+
+test('the ticket shows blanks rather than breaking on an empty form', () => {
+  const html = inForm(<TicketPreview />);
+  expect(html).toContain('PENDING');
+  expect(html).not.toContain('undefined');
+});
+
+test('the issued ticket carries the reference and a QR code', () => {
+  const html = renderToString(
+    <TicketPreview
+      values={FILLED}
+      reference="AB12CD34"
+      qr={<QRCodeSVG value="HPAIR-AB12CD34" size={84} />}
+    />
+  );
+  expect(html).toContain('AB12CD34');
+  expect(html).toContain('ticket-issued');
+  expect(html).toContain('<svg');
 });

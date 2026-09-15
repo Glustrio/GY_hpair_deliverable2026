@@ -3,6 +3,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { SUMMARY_SECTIONS, visibleRows, displayValue } from '../utils/submission';
+import { QRCodeSVG } from 'qrcode.react';
+import TicketPreview from './TicketPreview';
 import { downloadSummaryPdf } from '../utils/summaryPdf';
 import { emailSummary } from '../services/emailService';
 
@@ -38,9 +40,13 @@ const SubmissionSuccess = ({ reference, values, onStartAnother, defaultEmail }) 
         Application sent
       </h2>
 
-      <p>
-        Your reference number is <strong>{reference}</strong>. Keep it for your records.
-      </p>
+      <p>Keep this for your records.</p>
+
+      <TicketPreview
+        values={values}
+        reference={reference}
+        qr={<QRCodeSVG value={`HPAIR-${reference}`} size={84} level="M" />}
+      />
 
       {/* The summary is on screen as well as downloadable, so the applicant still has
           their answers if the download is blocked. */}

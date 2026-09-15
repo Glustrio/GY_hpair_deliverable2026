@@ -8,8 +8,8 @@ import { FIELDS, buildDate, normaliseLinkedinUrl } from '../validation/applicati
 
 const nameFor = (list, code) => list.find((item) => item.code === code)?.name ?? code;
 
-const countryName = (code) => nameFor(COUNTRIES, code);
-const languageName = (code) => nameFor(LANGUAGES, code);
+export const countryName = (code) => nameFor(COUNTRIES, code);
+export const languageName = (code) => nameFor(LANGUAGES, code);
 
 const GENDER_LABELS = {
   woman: 'Woman',

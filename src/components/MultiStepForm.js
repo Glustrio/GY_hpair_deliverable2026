@@ -14,6 +14,7 @@ import StepIndicator from './StepIndicator';
 import AutoSaveDraft from './AutoSaveDraft';
 import SubmissionSuccess from './SubmissionSuccess';
 import MySubmissions from './MySubmissions';
+import TicketPreview from './TicketPreview';
 import CvStep from './steps/CvStep';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import ContactStep from './steps/ContactStep';
@@ -307,6 +308,12 @@ const MultiStepForm = () => {
                 stepIndex={stepIndex}
                 paused={!draftChecked || draft !== null}
               />
+
+              {/* Fills in as they type, so there is something to watch build up. */}
+              <div className="ticket-panel">
+                <p className="ticket-panel-label">Your application so far</p>
+                <TicketPreview />
+              </div>
             </Form>
           )}
         </Formik>
