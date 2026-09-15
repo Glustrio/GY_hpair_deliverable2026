@@ -1,18 +1,32 @@
-import React, { useEffect, useRef } from 'react';
-import { buildSummaryText, downloadTextFile, SUMMARY_SECTIONS, visibleRows, displayValue }
-  from '../utils/submission';
+import React, { useEffect, useRef, useState } from 'react';
+import { SUMMARY_SECTIONS, visibleRows, displayValue } from '../utils/submission';
+import { downloadSummaryPdf } from '../utils/summaryPdf';
+import { emailSummary } from '../services/emailService';
 
-const SubmissionSuccess = ({ reference, values, onStartAnother }) => {
+const SubmissionSuccess = ({ reference, values, onStartAnother, defaultEmail }) => {
   const headingRef = useRef(null);
+  const [email, setEmail] = useState(defaultEmail || '');
+  const [sending, setSending] = useState(false);
+  const [emailResult, setEmailResult] = useState(null);
 
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
 
-  const handleDownload = () => {
-    const safeName = (values.lastName || 'application').replace(/[^a-z0-9]/gi, '-').toLowerCase();
-    const date = new Date().toISOString().slice(0, 10);
-    downloadTextFile(`hpair-${safeName}-${date}.txt`, buildSummaryText(values, reference));
+  const [saving, setSaving] = useState(false);
+
+  const handleEmail = async (event) => {
+    event.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setEmailResult(await emailSummary(email, values, reference));
+    setSending(false);
+  };
+
+  const handleDownload = async () => {
+    setSaving(true);
+    await downloadSummaryPdf(values, reference);
+    setSaving(false);
   };
 
   return (
@@ -39,12 +53,43 @@ const SubmissionSuccess = ({ reference, values, onStartAnother }) => {
         </section>
       ))}
 
+      <form className="email-copy" onSubmit={handleEmail}>
+        <label className="form-label" htmlFor="email-copy-to">
+          Email yourself a copy
+        </label>
+        <div className="email-copy-row">
+          <input
+            id="email-copy-to"
+            type="email"
+            className="form-input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <button type="submit" className="btn btn-secondary" aria-disabled={sending}>
+            {sending ? 'Sending' : 'Send'}
+          </button>
+        </div>
+        <div role="status" aria-live="polite">
+          {emailResult && (
+            <div className={`submit-message ${emailResult.success ? 'success' : 'error'}`}>
+              {emailResult.message}
+            </div>
+          )}
+        </div>
+      </form>
+
       <div className="form-actions">
         <button type="button" className="btn btn-secondary btn-back" onClick={onStartAnother}>
           Start another application
         </button>
-        <button type="button" className="btn btn-primary" onClick={handleDownload}>
-          Download a copy
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleDownload}
+          aria-disabled={saving}
+        >
+          {saving ? 'Preparing PDF' : 'Download a copy (PDF)'}
         </button>
       </div>
     </div>

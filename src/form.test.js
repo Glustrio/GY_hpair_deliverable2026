@@ -20,6 +20,10 @@ jest.mock('./services/cvService', () => ({
   rejectionReason: () => null,
 }));
 
+jest.mock('./services/emailService', () => ({
+  emailSummary: () => Promise.resolve({ success: true, message: 'sent' }),
+}));
+
 const FILLED = {
   ...EMPTY_VALUES,
   firstName: 'Gordon', lastName: 'Yu', dobDay: '27', dobMonth: '3', dobYear: '2005',
@@ -213,4 +217,18 @@ test('the CV step comes first, so autofill happens before anything is typed', ()
   expect(STEPS[1].fields).toContain('firstName');
   expect(STEPS[2].fields).toContain('phone');
   expect(STEPS[2].fields).toContain('address');
+});
+
+test('the confirmation screen offers to email a copy, prefilled with the account address', () => {
+  const html = renderToString(
+    <SubmissionSuccess
+      reference="AB12CD34"
+      values={FILLED}
+      defaultEmail="gordon@example.edu"
+      onStartAnother={() => {}}
+    />
+  );
+  expect(html).toContain('Email yourself a copy');
+  expect(html).toContain('gordon@example.edu');
+  expect(html).toContain('Download a copy (PDF)');
 });

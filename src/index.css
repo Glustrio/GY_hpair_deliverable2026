@@ -720,3 +720,20 @@ code {
   display: inline-block;
   min-width: 108px;
 }
+
+.email-copy {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.email-copy-row {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .email-copy-row {
+    flex-direction: column;
+  }
+}

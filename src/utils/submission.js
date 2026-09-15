@@ -102,40 +102,4 @@ export const visibleRows = (section, values) =>
 
 export const displayValue = (value) => (value === undefined || value === null || value === '' ? 'Not provided' : String(value));
 
-const genderLabel = (code) => (code ? GENDER_LABELS[code] ?? code : 'Not answered');
-
-export const buildSummaryText = (values, reference) => {
-  const lines = [
-    'HPAIR APPLICATION SUMMARY',
-    `Reference: ${reference}`,
-    `Downloaded: ${new Date().toLocaleString()}`,
-    '',
-  ];
-
-  SUMMARY_SECTIONS.forEach((section) => {
-    lines.push(section.title.toUpperCase());
-    visibleRows(section, values).forEach((row) => {
-      lines.push(`  ${row.label}: ${displayValue(row.value(values))}`);
-    });
-    lines.push('');
-  });
-
-  lines.push('EQUALITY INFORMATION');
-  lines.push(`  Gender: ${genderLabel(values[FIELDS.gender])}`);
-  lines.push('');
-
-  return lines.join('\n');
-};
-
-export const downloadTextFile = (filename, text) => {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  // Firefox only fires the click for an anchor that is in the document.
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  // Safari has cancelled downloads when the object URL is revoked in the same tick.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-};
+export const genderLabel = (code) => (code ? GENDER_LABELS[code] ?? code : 'Not answered');

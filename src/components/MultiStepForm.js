@@ -145,6 +145,7 @@ const MultiStepForm = () => {
           <SubmissionSuccess
             reference={result.reference}
             values={result.values}
+            defaultEmail={user.email}
             onStartAnother={startAnother}
           />
         </div>
