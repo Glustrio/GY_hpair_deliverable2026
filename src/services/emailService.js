@@ -26,11 +26,15 @@ export const emailSummary = async (to, values, reference) => {
 
     if (response.ok) return { success: true, message: `Sent to ${to}.` };
 
+    // The dev server has no API routes, so it answers with its HTML page.
+    if (response.status === 404) {
+      return { success: false, message: 'Email only works on the deployed site, not locally.' };
+    }
+
     const { error } = await response.json().catch(() => ({}));
     return { success: false, message: error || 'Could not send the email.' };
   } catch (error) {
     console.error('Email error:', error);
-    // The API route does not exist under `npm start`, only on the deployment.
-    return { success: false, message: 'Email is only available on the deployed site.' };
+    return { success: false, message: 'Could not reach the email service.' };
   }
 };

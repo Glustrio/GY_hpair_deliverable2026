@@ -3,11 +3,15 @@
 
 const FIREBASE_LOOKUP = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup';
 
+// Same public identifier as src/firebase/config.js. Not a secret, and inlining it
+// means one fewer environment variable to get wrong.
+const FIREBASE_API_KEY = 'AIzaSyClZzu2rYz8juxlNh8TUmAvakK0a6Lqz5M';
+
 // Without this the endpoint is an open relay: anyone could POST to it and send mail
 // from this domain. Exchanging the caller's Firebase ID token for a user proves the
 // request came from someone signed in to the app.
 const verify = async (idToken) => {
-  const response = await fetch(`${FIREBASE_LOOKUP}?key=${process.env.REACT_APP_FIREBASE_API_KEY}`, {
+  const response = await fetch(`${FIREBASE_LOOKUP}?key=${FIREBASE_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ idToken }),
